@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#EFEEE9">
+<title>순간 영작 드릴</title>
+<style>
+  :root{
+    --bg:#EFEEE9; --card:#FFFFFF; --ink:#1F2421; --sub:#6B6F6A;
+    --accent:#2F6F5E; --again:#B5562E; --border:rgba(31,36,33,.10);
+    --soft:#F4F3EE; --accent-soft:rgba(47,111,94,.10); --again-soft:rgba(181,86,46,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16181A; --card:#1E2123; --ink:#ECEAE3; --sub:#9A9D98;
+      --accent:#5FB89E; --again:#D98A5F; --border:rgba(255,255,255,.11);
+      --soft:#24272A; --accent-soft:rgba(95,184,158,.14); --again-soft:rgba(217,138,95,.14);
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  }
+  .wrap{width:100%; max-width:480px; padding:18px 18px 40px; display:flex; flex-direction:column; min-height:100vh;}
+
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .brand{font-size:15px; font-weight:600; letter-spacing:-.01em;}
+  .brand small{font-weight:400; color:var(--sub); font-size:12px; margin-left:6px;}
+  .reset{font-size:12px; color:var(--sub); background:none; border:none; padding:6px; cursor:pointer;}
+
+  .levels{display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:16px;}
+  .lv{
+    border:1px solid var(--border); background:var(--card); border-radius:11px;
+    padding:9px 4px; text-align:center; cursor:pointer; transition:.15s;
+  }
+  .lv .n{font-size:14px; font-weight:600;}
+  .lv .m{font-size:10.5px; color:var(--sub); margin-top:2px; font-variant-numeric:tabular-nums;}
+  .lv.active{background:var(--accent); border-color:var(--accent);}
+  .lv.active .n{color:#fff;} .lv.active .m{color:rgba(255,255,255,.85);}
+  @media (prefers-color-scheme: dark){ .lv.active .n,.lv.active .m{color:#10211C;} }
+
+  .meta{display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; font-size:12.5px; color:var(--sub);}
+  .meta .pos{font-variant-numeric:tabular-nums; font-weight:600; color:var(--ink);}
+  .track{height:4px; background:var(--soft); border-radius:99px; overflow:hidden; margin-bottom:18px;}
+  .fill{height:100%; width:2%; background:var(--accent); border-radius:99px; transition:width .25s;}
+
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:18px;
+    padding:30px 22px; flex:1; display:flex; flex-direction:column; justify-content:center;
+    min-height:200px; text-align:center;
+  }
+  .ko{font-size:25px; font-weight:600; letter-spacing:-.015em; margin:0;}
+  .ans{margin-top:20px; padding-top:18px; border-top:1px solid var(--border); display:none;}
+  .ans.show{display:block; animation:rise .2s ease;}
+  @keyframes rise{from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:none;}}
+  .en{font-size:21px; font-weight:600; color:var(--accent); margin:0; letter-spacing:-.01em;}
+  .hint{margin-top:9px; font-size:12px; color:var(--sub);}
+
+  .controls{margin-top:16px;}
+  button{font-family:inherit;}
+  .reveal{
+    width:100%; padding:15px; border-radius:13px; border:none;
+    background:var(--accent); color:#fff; font-size:15.5px; font-weight:600; cursor:pointer;
+  }
+  @media (prefers-color-scheme: dark){ .reveal{color:#10211C;} }
+  .judge{display:none; gap:10px;}
+  .judge.show{display:flex;}
+  .jbtn{
+    flex:1; padding:15px; border-radius:13px; font-size:15.5px; font-weight:600; cursor:pointer;
+    background:var(--card);
+  }
+  .jbtn.again{border:1.5px solid var(--again); color:var(--again);}
+  .jbtn.again:active{background:var(--again-soft);}
+  .jbtn.got{border:1.5px solid var(--accent); color:var(--accent);}
+  .jbtn.got:active{background:var(--accent-soft);}
+
+  .nav{display:flex; justify-content:space-between; margin-top:14px;}
+  .nav button{
+    background:none; border:none; color:var(--sub); font-size:13.5px; font-weight:500;
+    padding:8px 4px; cursor:pointer; display:flex; align-items:center; gap:5px;
+  }
+  .nav svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+
+  .done{
+    background:var(--soft); border-radius:16px; padding:24px 20px; text-align:center; display:none;
+    flex:1; flex-direction:column; justify-content:center;
+  }
+  .done.show{display:flex;}
+  .done h2{margin:0 0 6px; font-size:19px; font-weight:600;}
+  .done p{margin:0; font-size:14px; color:var(--sub);}
+  .done .row{display:flex; gap:10px; margin-top:18px; justify-content:center;}
+  .done .row button{
+    padding:11px 16px; border-radius:11px; border:1px solid var(--border);
+    background:var(--card); color:var(--ink); font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .done .row button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  @media (prefers-color-scheme: dark){ .done .row button.primary{color:#10211C;} }
+
+  .note{margin-top:18px; font-size:11.5px; color:var(--sub); text-align:center; line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">순간 영작 <small>한국어 → 1초 안에 영어로</small></div>
+    <button class="reset" id="resetBtn">진도 초기화</button>
+  </header>
+
+  <div class="levels" id="levels"></div>
+
+  <div class="meta">
+    <span class="pos" id="pos">1 / 50</span>
+    <span id="mastered">완료 0</span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+
+  <div class="card" id="card">
+    <p class="ko" id="ko">나 배고파.</p>
+    <div class="ans" id="ans">
+      <p class="en" id="en">I'm hungry.</p>
+      <p class="hint" id="hint"></p>
+    </div>
+  </div>
+
+  <div class="done" id="done">
+    <h2>한 바퀴 끝!</h2>
+    <p id="score"></p>
+    <div class="row">
+      <button id="redoMissed">막힌 것만 다시</button>
+      <button class="primary" id="redoAll">처음부터 다시</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="reveal" id="reveal">
+      <svg style="width:17px;height:17px;vertical-align:-3px;margin-right:6px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      정답 보기
+    </button>
+    <div class="judge" id="judge">
+      <button class="jbtn again" id="again">다시 막힘</button>
+      <button class="jbtn got" id="got">바로 나옴</button>
+    </div>
+    <div class="nav">
+      <button id="prev"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>이전</button>
+      <button id="shuffle"><svg viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>섞기</button>
+    </div>
+  </div>
+
+  <p class="note">한국어를 보고 입으로 영어를 뱉은 뒤 정답을 확인하세요.<br>인터넷 없이 작동하며, 진도는 이 기기에 저장됩니다.</p>
+</div>
+
+<script>
+const SETS = {
+  1: { name:"단문", items:[
+    ["나 배고파.","I'm hungry."],
+    ["나 너무 피곤해.","I'm so tired."],
+    ["이거 어제 샀어.","I bought this yesterday."],
+    ["그 사람한테 말해야 돼.","I have to tell him."],
+    ["나 지금 가야 돼.","I have to go now."],
+    ["물 좀 마시고 싶어.","I want some water."],
+    ["이거 한번 먹어볼래.","I want to try this."],
+    ["나 그거 몰라.","I don't know that."],
+    ["잘 모르겠어.","I'm not sure."],
+    ["난 그렇게 생각 안 해.","I don't think so."],
+    ["나 배 안 고파.","I'm not hungry."],
+    ["나 커피 좋아해.","I like coffee."],
+    ["그거 별로야.","I don't really like it."],
+    ["나 한국에서 왔어.","I'm from Korea."],
+    ["오늘 더워.","It's hot today."],
+    ["좀 추워.","It's a little cold."],
+    ["나 영어 공부하고 있어.","I'm studying English."],
+    ["나 여기 처음이야.","It's my first time here."],
+    ["화장실 어디예요?","Where's the bathroom?"],
+    ["이거 얼마예요?","How much is this?"],
+    ["다시 말해줄래요?","Can you say that again?"],
+    ["천천히 말해줄래요?","Can you speak slowly?"],
+    ["좀 도와줄 수 있어요?","Can you help me?"],
+    ["잠깐만요.","Hold on a second."],
+    ["나 준비됐어.","I'm ready."],
+    ["거의 다 됐어.","I'm almost done."],
+    ["나 늦었어.","I'm late."],
+    ["나 길 잃었어.","I'm lost."],
+    ["배고파 죽겠어.","I'm starving."],
+    ["나 집에 가고 싶어.","I want to go home."],
+    ["좀 쉬고 싶어.","I need a break."],
+    ["나 자야 돼.","I need to sleep."],
+    ["너랑 얘기하고 싶어.","I want to talk to you."],
+    ["뭐 좀 물어봐도 돼요?","Can I ask you something?"],
+    ["이거 가져가도 돼요?","Can I take this?"],
+    ["화장실 가도 돼요?","Can I go to the bathroom?"],
+    ["나 그거 못 해.","I can't do that."],
+    ["잘 안 들려요.","I can't hear you."],
+    ["이해 못 했어요.","I don't understand."],
+    ["무슨 말인지 알겠어.","I got it."],
+    ["나 시간 없어.","I don't have time."],
+    ["나 돈 없어.","I don't have money."],
+    ["질문 있어요.","I have a question."],
+    ["부탁이 하나 있어요.","I have a favor to ask."],
+    ["문제가 있어요.","There's a problem."],
+    ["방에 사람 많아.","There are a lot of people in the room."],
+    ["나 내일 시험 있어.","I have a test tomorrow."],
+    ["같이 가도 돼요?","Can I come with you?"],
+    ["나 잠깐 나갔다 올게.","I'll be right back."],
+    ["나중에 봐.","See you later."]
+  ]},
+  2: { name:"시제·조동사", items:[
+    ["어제 거기 갔었어.","I went there yesterday."],
+    ["내일 비 올 것 같아.","I think it's going to rain tomorrow."],
+    ["이거 먹어봐도 돼?","Can I try this?"],
+    ["아까 너한테 전화했어.","I called you earlier."],
+    ["점심 벌써 먹었어.","I already ate lunch."],
+    ["아직 안 먹었어.","I haven't eaten yet."],
+    ["너 그거 봤어?","Did you see that?"],
+    ["어디 갔다 왔어?","Where did you go?"],
+    ["나 그거 할 수 있어.","I can do that."],
+    ["나 수영 못 해.","I can't swim."],
+    ["내일 일찍 일어나야 돼.","I have to get up early tomorrow."],
+    ["우리 지금 가는 게 좋겠어.","We should go now."],
+    ["너 좀 쉬는 게 좋겠어.","You should get some rest."],
+    ["나중에 후회할지도 몰라.","You might regret it later."],
+    ["나 늦을 수도 있어.","I might be late."],
+    ["나 그거 안 했어.","I didn't do that."],
+    ["어젯밤에 잠 잘 못 잤어.","I didn't sleep well last night."],
+    ["주말에 뭐 할 거야?","What are you going to do this weekend?"],
+    ["이번 주말엔 그냥 쉴 거야.","I'm just going to relax this weekend."],
+    ["곧 끝날 거야.","It'll be done soon."],
+    ["다음 주에 시험 볼 거야.","I'm going to take a test next week."],
+    ["너 한국 가본 적 있어?","Have you ever been to Korea?"],
+    ["나 그 영화 본 적 있어.","I've seen that movie."],
+    ["거기 한 번도 안 가봤어.","I've never been there."],
+    ["창문 좀 열어도 돼?","Can I open the window?"],
+    ["사진 찍어도 돼요?","Can I take a picture?"],
+    ["여기 앉아도 돼요?","Can I sit here?"],
+    ["나 그거 사야 될 것 같아.","I think I should buy that."],
+    ["우산 가져가는 게 좋겠어.","You should bring an umbrella."],
+    ["그 사람 곧 올 거야.","He'll be here soon."],
+    ["나 아까 그 사람 봤어.","I saw him earlier."],
+    ["어제 너무 피곤했어.","I was so tired yesterday."],
+    ["그때 거기 없었어.","I wasn't there at that time."],
+    ["우리 만난 적 있나요?","Have we met before?"],
+    ["다시 해볼게.","I'll try again."],
+    ["내가 도와줄게.","I'll help you."],
+    ["나 이거 끝내야 돼.","I have to finish this."],
+    ["천천히 해도 돼.","You can take your time."],
+    ["바쁘면 나중에 해도 돼.","If you're busy, you can do it later."],
+    ["너 그거 알았어?","Did you know that?"],
+    ["나 그거 몰랐어.","I didn't know that."],
+    ["우리 전에 그 얘기했었잖아.","We talked about that before."],
+    ["내일 비 오면 안 갈 거야.","If it rains tomorrow, I won't go."],
+    ["시간 있으면 같이 가자.","If you have time, let's go together."],
+    ["나 거의 다 왔어.","I'm almost there."]
+  ]},
+  3: { name:"연결", items:[
+    ["피곤한데 그래도 가야 돼.","I'm tired, but I still have to go."],
+    ["이게 더 좋은 것 같은데 잘 모르겠어.","I think this one's better, but I'm not sure."],
+    ["가고 싶은데 시간이 없어.","I want to go, but I don't have time."],
+    ["배고픈데 먹을 게 없어.","I'm hungry, but there's nothing to eat."],
+    ["비싸지만 좋아.","It's expensive, but it's good."],
+    ["피곤해서 일찍 잤어.","I was tired, so I went to bed early."],
+    ["배고파서 뭐 좀 샀어.","I was hungry, so I bought something."],
+    ["늦어서 택시 탔어.","I was late, so I took a taxi."],
+    ["비 와서 안 나갔어.","It was raining, so I didn't go out."],
+    ["영어 잘하고 싶어서 여기 왔어.","I want to speak English well, so I came here."],
+    ["더워서 에어컨 켰어.","It was hot, so I turned on the AC."],
+    ["잘 모르겠어서 안 샀어.","I wasn't sure, so I didn't buy it."],
+    ["좋긴 한데 너무 비싸.","It's nice, but it's too expensive."],
+    ["하고 싶은데 못 하겠어.","I want to do it, but I can't."],
+    ["알긴 아는데 설명을 못 하겠어.","I know it, but I can't explain it."],
+    ["맞는 것 같은데 확실하진 않아.","I think it's right, but I'm not sure."],
+    ["가긴 갈 건데 좀 늦을 거야.","I'm going to go, but I'll be a little late."],
+    ["사고 싶은데 돈이 없어.","I want to buy it, but I don't have money."],
+    ["노력했는데 안 됐어.","I tried, but it didn't work."],
+    ["들었는데 이해 못 했어.","I heard it, but I didn't understand."],
+    ["봤는데 기억이 안 나.","I saw it, but I don't remember."],
+    ["시작은 했는데 아직 안 끝났어.","I started it, but I haven't finished yet."],
+    ["바쁘지만 도와줄게.","I'm busy, but I'll help you."],
+    ["비싸도 살 거야.","Even if it's expensive, I'm going to buy it."],
+    ["피곤해도 끝까지 할 거야.","Even if I'm tired, I'm going to finish."],
+    ["잘 모르지만 한번 해볼게.","I don't really know, but I'll give it a try."],
+    ["영어는 어렵지만 재밌어.","English is hard, but it's fun."],
+    ["처음엔 어려웠는데 지금은 괜찮아.","It was hard at first, but it's okay now."],
+    ["가고 싶었는데 못 갔어.","I wanted to go, but I couldn't."],
+    ["말하고 싶은데 단어가 생각이 안 나.","I want to say it, but I can't think of the word."],
+    ["천천히 하면 할 수 있어.","If I take my time, I can do it."],
+    ["연습하면 늘 거야.","If I practice, I'll get better."],
+    ["도와주면 고맙겠어.","I'd appreciate it if you could help."],
+    ["시간 되면 알려줘.","Let me know when you're free."],
+    ["끝나면 연락할게.","I'll text you when I'm done."]
+  ]},
+  4: { name:"실제 상황", items:[
+    ["아이스 아메리카노 한 잔 주세요.","Can I get an iced americano?"],
+    ["따뜻한 걸로 주세요.","I'll have a hot one."],
+    ["큰 사이즈로 할게요.","I'll get the large one."],
+    ["여기서 먹고 갈게요.","For here, please."],
+    ["포장해 주세요.","To go, please."],
+    ["얼음 적게 넣어 주세요.","Less ice, please."],
+    ["시럽 빼 주세요.","No syrup, please."],
+    ["와이파이 비밀번호 뭐예요?","What's the wifi password?"],
+    ["화장실 써도 돼요?","Can I use the restroom?"],
+    ["카드 돼요?","Do you take card?"],
+    ["이거 무슨 뜻이에요?","What does this mean?"],
+    ["이거 어떻게 발음해요?","How do you pronounce this?"],
+    ["다시 한번 설명해 주실래요?","Can you explain that again?"],
+    ["예문 하나 들어주실래요?","Can you give me an example?"],
+    ["제가 맞게 말했어요?","Did I say that right?"],
+    ["제 어순 좀 고쳐주세요.","Please correct my word order."],
+    ["좀 더 천천히 말씀해 주세요.","Can you speak more slowly?"],
+    ["잠깐 생각할 시간 좀 주세요.","Give me a second to think."],
+    ["이거 어떻게 말하는지 모르겠어요.","I don't know how to say this."],
+    ["이 단어 처음 들어봐요.","I've never heard this word before."],
+    ["방 청소 좀 해주실 수 있어요?","Could you clean my room?"],
+    ["수건 좀 더 주실 수 있어요?","Can I get some more towels?"],
+    ["에어컨이 안 돼요.","The AC isn't working."],
+    ["와이파이가 너무 느려요.","The wifi is really slow."],
+    ["뜨거운 물이 안 나와요.","There's no hot water."],
+    ["체크아웃 몇 시예요?","What time is checkout?"],
+    ["짐 좀 맡길 수 있어요?","Can I leave my luggage here?"],
+    ["방 키를 잃어버렸어요.","I lost my room key."],
+    ["이 근처에 편의점 있어요?","Is there a convenience store near here?"],
+    ["여기서 얼마나 걸려요?","How long does it take from here?"],
+    ["그랩 부를게요.","I'll call a Grab."],
+    ["여기 세워 주세요.","You can stop here."],
+    ["길 좀 알려주실 수 있어요?","Can you give me directions?"],
+    ["이거 어디서 살 수 있어요?","Where can I buy this?"],
+    ["사진 좀 찍어주실 수 있어요?","Can you take a picture for me?"],
+    ["뭐 추천해 주실래요?","What do you recommend?"],
+    ["이거 매워요?","Is this spicy?"],
+    ["따로따로 계산할게요.","We'll pay separately."],
+    ["계산서 주세요.","Can I get the bill?"],
+    ["잔돈은 괜찮아요.","Keep the change."]
+  ]}
+};
+
+const STORE_KEY = "gordon_drill_v1";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch(e){ saved = {}; }
+function persist(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch(e){} }
+function masteredSet(lv){ saved[lv] = saved[lv] || []; return new Set(saved[lv]); }
+
+let curLv = 1;
+let order = [];
+let pos = 0;
+let missed = new Set();
+let gotThisRound = new Set();
+
+const $ = id => document.getElementById(id);
+const elLevels=$("levels"), elKo=$("ko"), elEn=$("en"), elAns=$("ans"), elHint=$("hint"),
+      elPos=$("pos"), elFill=$("fill"), elMastered=$("mastered"), elCard=$("card"),
+      elReveal=$("reveal"), elJudge=$("judge"), elDone=$("done"), elScore=$("score");
+
+function buildLevels(){
+  elLevels.innerHTML = "";
+  [1,2,3,4].forEach(lv=>{
+    const total = SETS[lv].items.length;
+    const done = masteredSet(lv).size;
+    const d = document.createElement("div");
+    d.className = "lv" + (lv===curLv?" active":"");
+    d.innerHTML = `<div class="n">L${lv}</div><div class="m">${done}/${total}</div>`;
+    d.onclick = ()=>{ curLv=lv; startRound("all"); buildLevels(); };
+    elLevels.appendChild(d);
+  });
+}
+
+function startRound(mode){
+  const items = SETS[curLv].items;
+  const done = masteredSet(curLv);
+  if(mode==="missed"){
+    order = [...missed];
+  } else if(mode==="remaining"){
+    order = items.map((_,i)=>i).filter(i=>!done.has(i));
+    if(order.length===0) order = items.map((_,i)=>i);
+  } else {
+    order = items.map((_,i)=>i);
+  }
+  missed = new Set();
+  gotThisRound = new Set();
+  pos = 0;
+  elDone.classList.remove("show");
+  elCard.style.display = "flex";
+  document.querySelector(".controls").style.display = "block";
+  render();
+}
+
+function render(){
+  const idx = order[pos];
+  const it = SETS[curLv].items[idx];
+  elKo.textContent = it[0];
+  elEn.textContent = it[1];
+  elHint.textContent = masteredSet(curLv).has(idx) ? "✓ 이미 완료한 문장" : "";
+  elAns.classList.remove("show");
+  elReveal.style.display = "block";
+  elJudge.classList.remove("show");
+  elPos.textContent = (pos+1) + " / " + order.length;
+  elMastered.textContent = "완료 " + masteredSet(curLv).size + "/" + SETS[curLv].items.length;
+  elFill.style.width = Math.round(((pos+1)/order.length)*100) + "%";
+}
+
+function reveal(){
+  elAns.classList.add("show");
+  elReveal.style.display = "none";
+  elJudge.classList.add("show");
+}
+
+function advance(){
+  if(pos < order.length-1){ pos++; render(); }
+  else finish();
+}
+
+function finish(){
+  elCard.style.display = "none";
+  document.querySelector(".controls").style.display = "none";
+  elScore.textContent = "바로 나옴 " + gotThisRound.size + "개 · 막힘 " + missed.size + "개";
+  elDone.classList.add("show");
+  elFill.style.width = "100%";
+  buildLevels();
+}
+
+elReveal.onclick = reveal;
+$("got").onclick = ()=>{
+  const idx = order[pos];
+  gotThisRound.add(idx);
+  const set = masteredSet(curLv);
+  set.add(idx); saved[curLv] = [...set]; persist();
+  missed.delete(idx);
+  advance();
+};
+$("again").onclick = ()=>{
+  const idx = order[pos];
+  missed.add(idx);
+  const set = masteredSet(curLv);
+  if(set.has(idx)){ set.delete(idx); saved[curLv] = [...set]; persist(); }
+  advance();
+};
+$("prev").onclick = ()=>{ if(pos>0){ pos--; render(); } };
+$("shuffle").onclick = ()=>{
+  for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  pos=0; render();
+};
+$("redoMissed").onclick = ()=>{ if(missed.size>0){ startRound("missed"); } else { startRound("all"); } };
+$("redoAll").onclick = ()=> startRound("all");
+$("resetBtn").onclick = ()=>{
+  if(confirm("이 레벨의 완료 기록을 지울까요?")){
+    saved[curLv] = []; persist(); buildLevels(); startRound("all");
+  }
+};
+
+buildLevels();
+startRound("all");
+</script>
+</body>
+</html>
